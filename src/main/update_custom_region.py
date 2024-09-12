@@ -7,6 +7,7 @@ def main():
     """
     Main function to handle the logic for updating TestRail test cases.
     """
+    field_name = "custom_region_country"
     region_to_be_mimic = 3
     region_to_be_added = 4
     # Load environment variables
@@ -23,7 +24,7 @@ def main():
     )
 
     # Update test cases for all suites
-    test_case_updater.update_test_cases_for_all_suites()
+    test_case_updater.update_test_cases_for_all_suites(field_name)
 
 
 if __name__ == "__main__":

@@ -65,19 +65,17 @@ class TestRailAPI:
 
         return cases
 
-    def update_test_case(self, case_id, new_region_list):
+    def update_test_case(self, case_id, field_name, new_value_list):
         """
-        Update the test case with the new "Region" value.
+        Update the test case with the new value.
         """
         update_case_url = f"{self.base_url}/index.php?/api/v2/update_case/{case_id}"
         update_data = {
-            "custom_region_country": new_region_list
+            field_name: new_value_list
             # Replace with the actual field name in TestRail
         }
         response = requests.post(
             update_case_url, json=update_data, auth=self.auth, timeout=10
         )
         response.raise_for_status()
-        print(
-            f"Test case {case_id} updated successfully with region: {new_region_list}"
-        )
+        print(f"Test case {case_id} updated successfully with region: {new_value_list}")
