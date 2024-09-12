@@ -1,0 +1,60 @@
+name: Python3
+
+on:
+    push:
+        branches: [ "dev", "stage", "master", "main" ]
+    pull_request: # Trigger on pull requests to any branch
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v4
+
+            -   name: Install poetry
+                run: pipx install poetry
+
+            -   name: Set up Python
+                uses: actions/setup-python@v5
+                with:
+                    python-version: '3.12'
+                    cache: poetry
+                    cache-dependency-path: poetry.lock
+
+            -   name: Install dependencies
+                run: poetry install
+
+            -   name: Run linters
+                run: poetry run lint
+                continue-on-error: false
+
+            -   name: Run tests
+                run: poetry run test-ci
+                env:
+                    HEADLESS: "True"
+                if: success()
+
+            -   name: Run reports
+                run: poetry run report
+                if: success()
+
+            # Upload Reports as Artifacts
+            -   name: Upload Reports
+                if: success()
+                uses: actions/upload-artifact@v4
+                with:
+                    name: reports
+                    path: .run/reports
+
+            # Optional: Run SonarQube analysis if you have it configured
+            # - name: Run SonarQube Scanner
+            #   env:
+            #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            #   run: |
+            #     poetry run sonar-scanner \
+            #     -Dsonar.projectKey=my_python_project \
+            #     -Dsonar.sources=. \
+            #     -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            #     -Dsonar.login=${{ secrets.SONAR_TOKEN }}

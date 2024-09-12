@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "python-testrail-api"
+version = "0.1.0"
+description = ""
+authors = ["Alex Andrade <alexander.andrade@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "main", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-dotenv = "^1.0.1"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+pylint = "^3.2.6"
+pysonar-scanner = "^0.1.0.340"
+pre-commit = "^3.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+post-install = "scripts.helper:post_install"
+sonar = "scripts.helper:sonar"
+lint = "scripts.helper:lint"
+update-region = "src.main.update_custom_region:main"
