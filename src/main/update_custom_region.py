@@ -5,12 +5,15 @@ from dotenv import load_dotenv
 
 
 def load_environment_variables():
+    """
+    Load environment variables
+    """
     region_to_be_mimic = 3
     region_to_be_added = 4
 
     # Load environment variables from .env file.
-
     load_dotenv()
+
     # TestRail credentials and API endpoint from .env
     base_url = os.getenv("TESTRAIL_BASE_URL")
     username = os.getenv("TESTRAIL_USERNAME")
@@ -33,29 +36,47 @@ def load_environment_variables():
 
 def get_test_cases(base_url, project_id, suite_id, auth):
     """
-    Get existing test cases from TestRail.
+    Get existing test cases from TestRail with pagination.
     """
-    get_cases_url = (
-        f"{base_url}/index.php?/api/v2/get_cases/{project_id}&suite_id={suite_id}"
-    )
-    response = requests.get(get_cases_url, auth=auth, timeout=10)
-    response.raise_for_status()  # Raise an error if the request fails
+    cases = []
+    limit = 250  # TestRail's maximum limit per request
+    offset = 0
 
-    # Check and print the response to debug
-    try:
-        response_data = response.json()  # Parse JSON response
-    except ValueError as e:
-        print(f"Failed to parse JSON response: {e}")
-        # Print only the first 100 characters of the response text
-        print("Response content (first 100 characters):", response.text[:100])
-        return []  # Return an empty list if parsing fails
+    while True:
+        get_cases_url = (
+            f"{base_url}/index.php?/api/v2/get_cases/{project_id}"
+            f"&suite_id={suite_id}"
+            f"&limit={limit}"
+            f"&offset={offset}"
+        )
+        response = requests.get(get_cases_url, auth=auth, timeout=10)
+        response.raise_for_status()  # Raise an error if the request fails
 
-    # Check if 'cases' key is present in the response
-    if "cases" not in response_data:
-        print(f"Unexpected response format: {response_data}")
-        return []  # Return an empty list if 'cases' is not found
+        # Check and print the response to debug
+        try:
+            response_data = response.json()  # Parse JSON response
+        except ValueError as e:
+            print(f"Failed to parse JSON response: {e}")
+            # Print only the first 100 characters of the response text
+            print("Response content (first 100 characters):", response.text[:100])
+            return []  # Return an empty list if parsing fails
 
-    return response_data["cases"]  # Extract the list of test cases
+        # Check if 'cases' key is present in the response
+        if "cases" not in response_data:
+            print(f"Unexpected response format: {response_data}")
+            return []  # Return an empty list if 'cases' is not found
+
+        # Append the retrieved cases to the list
+        cases.extend(response_data["cases"])
+
+        # Check if there are more cases to fetch
+        if len(response_data["cases"]) < limit:
+            break  # No more cases to fetch
+
+        # Increase the offset for the next batch
+        offset += limit
+
+    return cases
 
 
 def update_test_case(update_case_url, case_id, new_region_list, auth):
@@ -91,7 +112,7 @@ def main():
     # Define TestRail API authentication
     auth = (username, api_key)
 
-    # Get test cases
+    # Get test cases with pagination
     try:
         test_cases = get_test_cases(base_url, project_id, suite_id, auth)
     except requests.exceptions.RequestException as e:
@@ -134,13 +155,13 @@ def main():
         else:
             if region_to_be_mimic not in current_regions:
                 print(
-                    f"Test case {case_id} does not need an update it not "
-                    + "contains region to be mimic."
+                    f"Test case {case_id} does not need an update; it does not "
+                    + "contain region to be mimic."
                 )
             else:
                 print(
                     f"Test case {case_id} does not need an update or already "
-                    + "contains region {region_to_be_added}."
+                    + f"contains region {region_to_be_added}."
                 )
 
 
