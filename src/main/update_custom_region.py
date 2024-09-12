@@ -111,6 +111,55 @@ def update_test_case(update_case_url, case_id, new_region_list, auth):
     print(f"Test case {case_id} updated successfully with region: {new_region_list}")
 
 
+def process_test_cases(
+    test_cases, region_to_be_mimic, region_to_be_added, update_case_url, auth
+):
+    """
+    Process and update test cases based on region conditions.
+    """
+    for case in test_cases:
+        if not isinstance(case, dict):  # Check if each case is a dictionary
+            print(f"Unexpected case format: {case}")
+            continue
+
+        case_id = case["id"]
+        current_regions = case.get(
+            "custom_region_country", []
+        )  # Replace 'custom_region_country' with the actual field name in TestRail
+
+        # Ensure 'current_regions' is a list
+        if not isinstance(current_regions, list):
+            print(
+                f"Invalid format for regions in test case {case_id}: {current_regions}"
+            )
+            continue
+
+        # Check if region '3' is present and '4' is not already present
+        if (
+            region_to_be_mimic in current_regions
+            and region_to_be_added not in current_regions
+        ):
+            # Add region '4' to the current regions
+            new_region_list = current_regions + [region_to_be_added]
+
+            # Update the test case with the new "Region" value
+            try:
+                update_test_case(update_case_url, case_id, new_region_list, auth)
+            except requests.exceptions.RequestException as e:
+                print(f"Failed to update test case {case_id}: {e}")
+        else:
+            if region_to_be_mimic not in current_regions:
+                print(
+                    f"Test case {case_id} does not need an update; it does not "
+                    + "contain region to be mimic."
+                )
+            else:
+                print(
+                    f"Test case {case_id} does not need an update or already "
+                    + f"contains region {region_to_be_added}."
+                )
+
+
 def main():
     """
     Main function to handle the logic for updating TestRail test cases.
@@ -148,48 +197,10 @@ def main():
             print(f"Failed to fetch test cases for suite {suite_id}: {e}")
             continue
 
-        # Update test cases
-        for case in test_cases:
-            if not isinstance(case, dict):  # Check if each case is a dictionary
-                print(f"Unexpected case format: {case}")
-                continue
-
-            case_id = case["id"]
-            current_regions = case.get(
-                "custom_region_country", []
-            )  # Replace 'custom_region_country' with the actual field name in TestRail
-
-            # Ensure 'current_regions' is a list
-            if not isinstance(current_regions, list):
-                print(
-                    f"Invalid format for regions in test case {case_id}: {current_regions}"
-                )
-                continue
-
-            # Check if region '3' is present and '4' is not already present
-            if (
-                region_to_be_mimic in current_regions
-                and region_to_be_added not in current_regions
-            ):
-                # Add region '4' to the current regions
-                new_region_list = current_regions + [region_to_be_added]
-
-                # Update the test case with the new "Region" value
-                try:
-                    update_test_case(update_case_url, case_id, new_region_list, auth)
-                except requests.exceptions.RequestException as e:
-                    print(f"Failed to update test case {case_id}: {e}")
-            else:
-                if region_to_be_mimic not in current_regions:
-                    print(
-                        f"Test case {case_id} does not need an update; it does not "
-                        + "contain region to be mimic."
-                    )
-                else:
-                    print(
-                        f"Test case {case_id} does not need an update or already "
-                        + f"contains region {region_to_be_added}."
-                    )
+        # Process and update test cases
+        process_test_cases(
+            test_cases, region_to_be_mimic, region_to_be_added, update_case_url, auth
+        )
 
 
 if __name__ == "__main__":
