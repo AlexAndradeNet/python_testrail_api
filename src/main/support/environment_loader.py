@@ -3,6 +3,16 @@ import os
 from dotenv import load_dotenv
 
 
+def get_env_variable(var_name):
+    """
+    Returns the value of the requested environment variable.
+
+    :param var_name: The name of the environment variable.
+    :return: The value of the environment variable or None if not found.
+    """
+    return os.getenv(var_name)
+
+
 class EnvironmentLoader:
     """
     Class to load and manage environment variables from .env file.
@@ -52,12 +62,3 @@ class EnvironmentLoader:
         :return: A tuple containing the username and API key.
         """
         return self._env_vars["username"], self._env_vars["api_key"]
-
-    def get_env_variable(self, var_name):
-        """
-        Returns the value of the requested environment variable.
-
-        :param var_name: The name of the environment variable.
-        :return: The value of the environment variable or None if not found.
-        """
-        return os.getenv(var_name)

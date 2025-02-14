@@ -81,6 +81,10 @@ To update the region for test cases in TestRail, use the following command:
 ```bash
 poetry run update-region
 ```
+or
+```bash
+poetry run add-region-base-on-terminal
+```
 
 Ensure you have set up your environment and configured your `.env` file with the
 necessary TestRail credentials.
